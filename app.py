@@ -1,8 +1,10 @@
 import streamlit as st
 from truthcore import calculate_confidence
+
 password = st.text_input("Beta Password:", type="password")
 if password != "truthsetsfree":
     st.stop()
+
 st.title("TruthCore Beta - Probabilistic Truth Verifier")
 
 st.write("""
@@ -38,7 +40,4 @@ if st.button("Submit Feedback"):
 # Sidebar for beta info
 st.sidebar.title("Beta Signup")
 st.sidebar.write("Already signed up? Great! If not, join the waitlist.")
-email = st.sidebar.text_input("Email for beta access:")
-if st.button("Sign Up", key="signup"):
-    # Simulate signup (in real: integrate Google Forms or Firebase)
-    st.sidebar.success(f"Thanks, {email}! You'll get access soon.")
+st.sidebar.markdown('[Sign Up Here](https://forms.gle/Y5RL7GXd9zcQ2cmi9)')
