@@ -1,5 +1,7 @@
 import numpy as np
 from sklearn.preprocessing import normalize
+import requests
+import json
 
 def analyze_source_lineage(source):
     # Simulated: Score based on source credibility (e.g., known outlets vs. unknown)
@@ -10,12 +12,22 @@ def analyze_source_lineage(source):
     }
     return credibility_map.get(source.lower(), 0.5)  # Default to neutral
 
-def check_evidence_consistency(evidences):
-    # Simulated: Consistency as agreement ratio among evidences
-    if not evidences:
-        return 0.5
-    agreements = np.random.rand(len(evidences))  # Placeholder for real NLP comparison
-    return np.mean(agreements)
+def check_evidence_consistency(evidences, claim, api_key):
+    if not api_key:
+        return 0.5  # Fallback if no key
+    query = claim.replace(" ", "%20")  # URL-encode the claim
+    url = f"https://factchecktools.googleapis.com/v1alpha1/claims:search?query={query}&key={api_key}"
+    try:
+        response = requests.get(url)
+        data = json.loads(response.text)
+        if 'claims' in data and data['claims']:
+            positive_ratings = ['true', 'mostly true', 'accurate', 'correct']
+            positive_count = sum(1 for c in data['claims'] if any(r.get('textualRating', '').lower() in positive_ratings for r in c.get('claimReview', [])))
+            total = len(data['claims'])
+            return positive_count / total if total > 0 else 0.5
+        return 0.5  # Neutral if no results
+    except Exception as e:
+        return 0.5  # Fallback on error
 
 def evaluate_historical_reliability(source_history):
     # Simulated: Average past accuracy
@@ -29,7 +41,7 @@ def detect_manipulation_signals(claim):
     score_penalty = sum(word in claim.lower() for word in sensational_keywords) * 0.1
     return max(0.0, 1.0 - score_penalty)
 
-def calculate_confidence(claim, source, evidences=None, source_history=None):
+def calculate_confidence(claim, source, evidences=None, source_history=None, api_key=None):
     if evidences is None:
         evidences = []
     if source_history is None:
@@ -37,7 +49,7 @@ def calculate_confidence(claim, source, evidences=None, source_history=None):
     
     # Get individual scores
     lineage_score = analyze_source_lineage(source)
-    consistency_score = check_evidence_consistency(evidences)
+    consistency_score = check_evidence_consistency(evidences, claim, api_key)
     reliability_score = evaluate_historical_reliability(source_history)
     manipulation_score = detect_manipulation_signals(claim)
     
@@ -48,6 +60,7 @@ def calculate_confidence(claim, source, evidences=None, source_history=None):
     confidence = np.dot(scores, normalized_weights)
     
     return round(confidence * 100, 2)  # Percentage
+
 # Example usage (for testing):
-score = calculate_confidence("Claim text here", "reputable", ["evidence1", "evidence2"], [0.8, 0.9])
+score = calculate_confidence("Earth is flat", "unreliable", ["NASA says no", "Conspiracy site says yes"], [0.2, 0.3], api_key="AIzaSyA5NAuGX8iSgv6kX2uUru5Em4ISTqRiPQY")  # Replace with real key for test
 print(f"Confidence Score: {score}%")

@@ -1,6 +1,6 @@
 import streamlit as st
 from truthcore import calculate_confidence
-
+api_key = st.secrets["API_KEY"]
 password = st.text_input("Beta Password:", type="password")
 if password != "truthsetsfree":
     st.stop()
@@ -9,8 +9,11 @@ st.title("TruthCore Beta - Probabilistic Truth Verifier")
 
 st.write("""
 Welcome to the TruthCore beta! Enter a claim below, along with its source and any supporting evidences or historical reliability data. We'll compute a confidence score based on probabilistic analysis.
-Note: This is an early prototype—scores are simulated for demo purposes.
+Note: This is an early prototype—scores use real fact-checks when API key is provided.
 """)
+
+# Sidebar for API key
+
 
 # User inputs
 claim = st.text_area("Enter the claim or statement:")
@@ -20,11 +23,11 @@ source_history = st.text_input("Historical reliability scores (comma-separated, 
 
 if st.button("Verify Confidence"):
     if claim:
-        score = calculate_confidence(claim, source, evidences, source_history)
+        score = calculate_confidence(claim, source, evidences, source_history, api_key=api_key)
         st.success(f"Confidence Score: {score}%")
-        st.write("Breakdown (simulated):")
+        st.write("Breakdown (simulated except consistency, which uses real API if key provided):")
         st.write("- Source Lineage: Based on selected credibility.")
-        st.write("- Evidence Consistency: Agreement across inputs.")
+        st.write("- Evidence Consistency: From Google Fact Check API or fallback.")
         st.write("- Historical Reliability: Average of provided scores.")
         st.write("- Manipulation Signals: Checked for sensationalism.")
     else:
