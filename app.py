@@ -1,3 +1,4 @@
+```
 import streamlit as st
 from truthcore import calculate_confidence
 
@@ -5,32 +6,36 @@ password = st.text_input("Beta Password:", type="password")
 if password != "truthsetsfree":
     st.stop()
 
-api_key = st.secrets["API_KEY"]
-
 st.title("TruthCore Beta - Probabilistic Truth Verifier")
 
 st.write("""
 Welcome to the TruthCore beta! Enter a claim below, along with its source and any supporting evidences or historical reliability data. We'll compute a confidence score based on probabilistic analysis.
-Note: This is an early prototype—scores use real fact-checks.
+Note: This is an early prototype—scores use real fact-checks when API key is provided. Video URLs use transcription for claims.
 """)
+
+# Sidebar for API settings
+st.sidebar.subheader("API Settings")
+api_key = st.sidebar.text_input("Google Fact Check API Key:", type="password")
+openai_api_key = st.secrets["OPENAI_API_KEY"]  # Hardcoded via secrets for production
 
 # User inputs
 claim = st.text_area("Enter the claim or statement:")
 source = st.selectbox("Source credibility:", ["Reputable", "Neutral", "Unreliable"])
 evidences = st.text_area("Supporting evidences (one per line):").split("\n") if st.text_area else []
 source_history = st.text_input("Historical reliability scores (comma-separated, e.g., 0.8,0.9):").split(",") if st.text_input else []
+video_url = st.text_input("TikTok/Instagram Video URL (optional for fact-check):")
 
 if st.button("Verify Confidence"):
-    if claim:
-        score = calculate_confidence(claim, source, evidences, source_history, api_key=api_key)
+    if claim or video_url:
+        score = calculate_confidence(claim, source, evidences, source_history, api_key=api_key, openai_api_key=openai_api_key, video_url=video_url)
         st.success(f"Confidence Score: {score}%")
-        st.write("Breakdown (simulated except consistency, which uses real API):")
+        st.write("Breakdown (simulated except consistency, which uses real API if key provided):")
         st.write("- Source Lineage: Based on selected credibility.")
         st.write("- Evidence Consistency: From Google Fact Check API or fallback.")
         st.write("- Historical Reliability: Average of provided scores.")
         st.write("- Manipulation Signals: Checked for sensationalism.")
     else:
-        st.error("Please enter a claim.")
+        st.error("Please enter a claim or video URL.")
 
 # Feedback section for beta users
 st.subheader("Beta Feedback")
@@ -43,3 +48,5 @@ if st.button("Submit Feedback"):
 st.sidebar.title("Beta Signup")
 st.sidebar.write("Already signed up? Great! If not, join the waitlist.")
 st.sidebar.markdown('[Sign Up Here](https://forms.gle/Y5RL7GXd9zcQ2cmi9)')
+```
+

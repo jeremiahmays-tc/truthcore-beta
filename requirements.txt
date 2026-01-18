@@ -2,3 +2,8 @@ numpy
 scikit-learn
 streamlit
 requests
+gspreads
+oauth2client
+openai
+moviepy
+pydub

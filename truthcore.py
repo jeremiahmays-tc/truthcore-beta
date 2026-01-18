@@ -1,7 +1,10 @@
+```
 import numpy as np
 from sklearn.preprocessing import normalize
 import requests
 import json
+import openai
+from moviepy.editor import VideoFileClip
 
 def analyze_source_lineage(source):
     # Simulated: Score based on source credibility (e.g., known outlets vs. unknown)
@@ -41,11 +44,30 @@ def detect_manipulation_signals(claim):
     score_penalty = sum(word in claim.lower() for word in sensational_keywords) * 0.1
     return max(0.0, 1.0 - score_penalty)
 
-def calculate_confidence(claim, source, evidences=None, source_history=None, api_key=None):
+def transcribe_video(video_url, openai_api_key):
+    if not video_url:
+        return ""
+    try:
+        # Download video audio (simplified—use full code in production)
+        video = VideoFileClip(video_url)
+        audio = video.audio
+        audio.write_audiofile("temp_audio.mp3")
+        with open("temp_audio.mp3", "rb") as audio_file:
+            client = openai.OpenAI(api_key=openai_api_key)
+            transcript = client.audio.transcriptions.create(model="whisper-1", file=audio_file)
+        return transcript.text
+    except:
+        return ""  # Fallback
+
+def calculate_confidence(claim, source, evidences=None, source_history=None, api_key=None, openai_api_key=None, video_url=None):
     if evidences is None:
         evidences = []
     if source_history is None:
         source_history = []
+    
+    transcript = transcribe_video(video_url, openai_api_key) if video_url else ""
+    if transcript:
+        claim = transcript  # Use transcript as claim for fact-check
     
     # Get individual scores
     lineage_score = analyze_source_lineage(source)
@@ -62,5 +84,6 @@ def calculate_confidence(claim, source, evidences=None, source_history=None, api
     return round(confidence * 100, 2)  # Percentage
 
 # Example usage (for testing):
-score = calculate_confidence("Earth is flat", "unreliable", ["NASA says no", "Conspiracy site says yes"], [0.2, 0.3], api_key="AIzaSyA5NAuGX8iSgv6kX2uUru5Em4ISTqRiPQY")  # Replace with real key for test
-print(f"Confidence Score: {score}%")
+# score = calculate_confidence("Earth is flat", "unreliable", ["NASA says no", "Conspiracy site says yes"], [0.2, 0.3], api_key="YOUR_API_KEY_HERE", openai_api_key="YOUR_OPENAI_KEY_HERE", video_url="https://example.com/video.mp4")  # Replace with real keys/URL for test
+# print(f"Confidence Score: {score}%")
+```
