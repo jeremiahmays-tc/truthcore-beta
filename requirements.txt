@@ -2,8 +2,7 @@ numpy
 scikit-learn
 streamlit
 requests
-gspreads
-oauth2client
+gspread
 openai
 moviepy
 pydub
